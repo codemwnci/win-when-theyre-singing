@@ -1,0 +1,156 @@
+<html>
+    <head>
+        <title>Win When They're Singing</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Roboto:wght@100&display=swap" rel="stylesheet">
+
+        <style>
+            body {
+                background-color: black;
+                color: white;
+                margin-left: 50px;
+                margin-top: 50px;
+                font-family: 'Roboto', sans-serif;
+            }
+            #display-area {
+                font-size: 180px;
+                font-weight: bold;
+                font-family: 'Major Mono Display', monospace;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+            .pointer {
+                cursor: pointer;
+            }
+        </style>
+
+        <script>
+
+            const fadeBeginAt = 5000;
+            const defaultTimerStop = 25000;
+
+            var audio;
+            var swStopAt;
+
+            function play(track, withFade = true, stopAt = defaultTimerStop) {
+                stopwatchReset()
+                
+                if (audio) audio.pause()
+
+                audio = new Audio(track);
+                audio.addEventListener('loadeddata', () => {
+                    stopwatchStart()
+                })
+                audio.play();
+                
+                if (withFade) {
+                    setTimeout(function() {
+                        console.log("fading....")
+                        var volume = 100;
+                        let fader = setInterval(function(){
+                            volume -= 2;
+                            if (volume <= 0) {
+                                clearInterval(fader);
+                                audio.pause()
+                            }
+                            
+                            audio.volume = volume / 100;
+                        }, 50)
+                    }, fadeBeginAt)
+                }
+
+                clearTimeout(swStopAt) // if previously set 
+                swStopAt = setTimeout(stopwatchStop, stopAt);
+            }
+
+            function stopAudio() {
+                audio.pause();
+            }
+
+
+            // Stopwatch
+            var timeBegan = null, timeStopped = null, stoppedDuration = 0, started = null;
+
+            function stopwatchStart() {
+                clearInterval(started);
+                if (timeBegan === null) { timeBegan = new Date(); }
+                if (timeStopped !== null) { stoppedDuration += (new Date() - timeStopped); }
+                started = setInterval(clockRunning, 10);
+            }
+
+            function stopwatchStop() {
+                timeStopped = new Date();
+                clearInterval(started);
+            }
+
+            function stopwatchReset() {
+                clearInterval(started);
+                stoppedDuration = 0;
+                timeBegan = null;
+                timeStopped = null;
+                document.getElementById("display-area").innerHTML = "00.000";
+            }
+
+            function clockRunning() {
+                var currentTime = new Date()
+                    , timeElapsed = new Date(currentTime - timeBegan - stoppedDuration)
+                    , sec = timeElapsed.getUTCSeconds()
+                    , ms = timeElapsed.getUTCMilliseconds();
+
+                document.getElementById("display-area").innerHTML =
+                    (sec > 9 ? sec : "0" + sec) + "." +
+                    (ms > 99 ? ms : ms > 9 ? "0" + ms : "00" + ms);
+            };
+
+            
+            function playTrack(id, isQuestion = true) {
+                
+                for (let i in tracks) {
+                    let track = tracks[i]
+                    if (tracks[i].id == id) {
+                        let withFade = isQuestion // fade music out after 5 seconds if it is question round
+                        let stopAt = isQuestion ? defaultTimerStop : track.stopAt // if it is the answer, stop the timer at the right time, otherwise for questions, carry on for 25 seconds
+
+                        play(track.url, withFade, stopAt)
+                        return;
+                    }
+                }
+            }
+
+            // load tracks from JSON
+            // JSON should contain - ID, pathToMP3, msOfSingingStarting 
+            var tracks = [
+                { id: 1, url: "https://download.samplelib.com/mp3/sample-15s.mp3", stopAt: 8432 },
+                { id: 2, url: "https://download.samplelib.com/mp3/sample-15s.mp3", stopAt: 8432 },
+                { id: 3, url: "https://download.samplelib.com/mp3/sample-15s.mp3", stopAt: 8432 },
+                { id: 4, url: "https://download.samplelib.com/mp3/sample-15s.mp3", stopAt: 8432 },
+                { id: 5, url: "https://download.samplelib.com/mp3/sample-15s.mp3", stopAt: 8432 },
+            ]
+
+
+            // add the tracks to the page once the page has fully loaded
+            document.addEventListener('DOMContentLoaded', (e) => {
+                stopwatchReset();
+
+                var tracksEl = document.getElementById("tracks")
+                tracks.forEach(track => {
+                    tracksEl.innerHTML += `<div>
+                        <span onclick="playTrack(${track.id})" class="pointer">Track ${track.id}: Question</span> -  
+                        <span onclick="playTrack(${track.id}, false)" class="pointer">Answer</span>
+                        </div>`
+                });
+            });
+        </script>
+    </head>
+
+    <body>
+        <h1>Win When They're Singing</h1>
+
+        <!-- <div onclick="stopAudio()">||</div> -->
+        <div id="tracks"> </div>
+        <div id="stopwatch"><output id="display-area"></output></div>
+    </body>
+</html>
