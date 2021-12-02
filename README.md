@@ -27,7 +27,7 @@ Note - the timer should not start until the MP3 is downloaded. This should only 
 
 To use this for your own quizzes, you need to follow a few simple steps.
 
-1. Download the HTML file
+1. Download the (index.html) HTML file
 2. Modify the source code of the HTML to point to your own MP3 tracks. Just edit the JSON `tracks` data near the bottom of the code. Make sure each ID is unique, set the URL to the MP3 you wish to play, and set the `stopAt` value to be the millisecond value of when the singing starts on the track.
 3. Run on a simple HTTP server. My recommendation would be to save the file in it's own folder, and if you have python installed, use the built-in python http server by running `python -m http.server`. This will launch the server on http://localhost:8000
  
